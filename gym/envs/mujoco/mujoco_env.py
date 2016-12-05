@@ -11,7 +11,9 @@ try:
     import mujoco_py
     from mujoco_py.mjlib import mjlib
 except ImportError as e:
-    raise error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
+    raise error.DependencyNotInstalled(
+        "{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
+
 
 class MujocoEnv(gym.Env):
     """Superclass for all MuJoCo environments.
@@ -21,17 +23,18 @@ class MujocoEnv(gym.Env):
         if model_path.startswith("/"):
             fullpath = model_path
         else:
-            fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
+            fullpath = os.path.join(os.path.dirname(
+                __file__), "assets", model_path)
         if not path.exists(fullpath):
-            raise IOError("File %s does not exist"%fullpath)
-        self.frame_skip= frame_skip
+            raise IOError("File %s does not exist" % fullpath)
+        self.frame_skip = frame_skip
         self.model = mujoco_py.MjModel(fullpath)
         self.data = self.model.data
         self.viewer = None
 
         self.metadata = {
             'render.modes': ['human', 'rgb_array'],
-            'video.frames_per_second' : int(np.round(1.0 / self.dt))
+            'video.frames_per_second': int(np.round(1.0 / self.dt))
         }
 
         self.init_qpos = self.model.data.qpos.ravel().copy()
@@ -45,7 +48,7 @@ class MujocoEnv(gym.Env):
         high = bounds[:, 1]
         self.action_space = spaces.Box(low, high)
 
-        high = np.inf*np.ones(self.obs_dim)
+        high = np.inf * np.ones(self.obs_dim)
         low = -high
         self.observation_space = spaces.Box(low, high)
 
@@ -84,12 +87,12 @@ class MujocoEnv(gym.Env):
         return ob
 
     def set_state(self, qpos, qvel):
-        assert qpos.shape == (self.model.nq,) and qvel.shape == (self.model.nv,)
+        assert qpos.shape == (
+            self.model.nq,) and qvel.shape == (self.model.nv,)
         self.model.data.qpos = qpos
         self.model.data.qvel = qvel
-        self.model._compute_subtree() #pylint: disable=W0212
+        self.model._compute_subtree()  # pylint: disable=W0212
         self.model.forward()
-
 
     @property
     def dt(self):
@@ -110,7 +113,7 @@ class MujocoEnv(gym.Env):
         if mode == 'rgb_array':
             self._get_viewer().render()
             data, width, height = self._get_viewer().get_image()
-            return np.fromstring(data, dtype='uint8').reshape(height, width, 3)[::-1,:,:]
+            return np.fromstring(data, dtype='uint8').reshape(height, width, 3)[::-1, :, :]
         elif mode == 'human':
             self._get_viewer().loop_once()
 
@@ -139,3 +142,17 @@ class MujocoEnv(gym.Env):
             self.model.data.qpos.flat,
             self.model.data.qvel.flat
         ])
+
+    def set_geom_pos(self, name, pos):
+        idx = self.model.geom_names.index(name)
+        geom_pos = self.model.geom_pos.copy()
+        geom_pos[idx] = pos
+        self.model.geom_pos = geom_pos
+        self.reset_model()
+
+    def get_geom_pos(self, name):
+        idx = self.model.geom_names.index(name)
+        return self.model.geom_pos[idx]
+
+    def has_geom(self, name):
+        return name in self.model.geom_names
