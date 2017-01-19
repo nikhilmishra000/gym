@@ -156,3 +156,10 @@ class MujocoEnv(gym.Env):
 
     def has_geom(self, name):
         return name in self.model.geom_names
+
+    @property
+    def image(self):
+        if self.viewer:
+            raw, w, h = self.viewer.get_image()
+            img = np.fromstring(raw, dtype=np.uint8)
+            return img.reshape((w, h, 3))[::-1].copy()
