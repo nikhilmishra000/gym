@@ -144,11 +144,13 @@ class MujocoEnv(gym.Env):
         ])
 
     def set_geom_pos(self, name, pos):
+        qpos = self.data.qpos.copy().ravel()
+        qvel = self.data.qvel.copy().ravel()
         idx = self.model.geom_names.index(name)
         geom_pos = self.model.geom_pos.copy()
         geom_pos[idx] = pos
         self.model.geom_pos = geom_pos
-        self.reset_model()
+        self.set_state(qpos, qvel)
 
     def get_geom_pos(self, name):
         idx = self.model.geom_names.index(name)
