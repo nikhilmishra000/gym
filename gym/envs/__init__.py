@@ -204,7 +204,7 @@ register(
 register(
     id='ReacherPush-v1',
     entry_point='gym.envs.mujoco:ReacherPushEnv',
-    timestep_limit=100,
+    timestep_limit=50,
     reward_threshold=-3.75,
 )
 
